@@ -5,15 +5,17 @@
 }
 
 :root {
-  --teal-dark: #075E54;
-  --teal: #128C7E;
-  --green: #25D366;
-  --light-green: #DCF8C6;
-  --bg: #ECE5DD;
-  --white: #FFFFFF;
-  --gray: #8696A0;
-  --text: #111B21;
-  --shadow: rgba(0, 0, 0, 0.08);
+  --accent: #2D9C8F;
+  --accent-hover: #248A7E;
+  --accent-light: #EAF6F4;
+  --bg: #F5F5F5;
+  --card: #FFFFFF;
+  --text: #1A1A2E;
+  --muted: #9CA3AF;
+  --border: #E5E7EB;
+  --orange: #E67E22;
+  --orange-hover: #D35400;
+  --radius: 16px;
 }
 
 body {
@@ -24,141 +26,94 @@ body {
   overflow: hidden;
 }
 
+/* ── Layout ── */
 .app {
-  max-width: 480px;
+  max-width: 420px;
   margin: 0 auto;
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
-  position: relative;
 }
 
-/* ── Top Bar (WhatsApp-style header) ── */
+/* ── Header ── */
 .top-bar {
-  background: var(--teal-dark);
-  color: var(--white);
-  padding: 14px 20px;
+  padding: 20px 24px 0;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   flex-shrink: 0;
 }
 
 .top-bar h1 {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
 }
 
 .session-count {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  color: var(--muted);
 }
 
-/* ── Chat Area ── */
-.chat-area {
+/* ── Content ── */
+.content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 16px;
+  padding: 20px 16px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-/* ── Timer Card (chat-bubble style) ── */
+/* ── Timer Card ── */
 .timer-card {
-  background: var(--white);
-  border-radius: 12px;
-  padding: 24px 20px 28px;
-  box-shadow: 0 1px 3px var(--shadow);
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28px 24px 24px;
   text-align: center;
+  border: 1px solid var(--border);
 }
 
-/* Mode Tabs */
+/* ── Mode Tabs ── */
 .mode-tabs {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-bottom: 28px;
+  display: inline-flex;
+  gap: 4px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 32px;
 }
 
 .tab {
   border: none;
-  background: var(--bg);
-  color: var(--gray);
+  background: transparent;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 500;
-  padding: 7px 16px;
-  border-radius: 20px;
+  padding: 8px 16px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .tab.active {
-  background: var(--teal-dark);
-  color: var(--white);
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .tab:hover:not(.active) {
-  background: #d5ded6;
+  color: var(--text);
 }
 
-/* Duration Settings */
-.duration-settings {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.duration-input {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.duration-input label {
-  font-size: 12px;
-  color: var(--gray);
-  min-width: 36px;
-  text-align: right;
-}
-
-.duration-input input {
-  width: 48px;
-  padding: 5px 4px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--teal-dark);
-  background: var(--bg);
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.duration-input input:focus {
-  border-color: var(--teal);
-}
-
-.duration-input input:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.duration-input span {
-  font-size: 11px;
-  color: var(--gray);
-}
-
-/* Timer Display */
+/* ── Timer Display ── */
 .timer-display {
-  font-size: 72px;
-  font-weight: 300;
-  letter-spacing: 2px;
-  color: var(--teal-dark);
+  font-size: 80px;
+  font-weight: 200;
+  letter-spacing: -2px;
+  color: var(--text);
   line-height: 1;
   margin-bottom: 8px;
   font-variant-numeric: tabular-nums;
@@ -166,96 +121,155 @@ body {
 
 .timer-label {
   font-size: 14px;
-  color: var(--gray);
+  font-weight: 400;
+  color: var(--muted);
+  margin-bottom: 32px;
 }
 
-/* ── History Messages (chat-bubble style) ── */
-.history {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.history-msg {
-  background: var(--light-green);
-  padding: 8px 14px;
-  border-radius: 8px 8px 0 8px;
-  font-size: 13px;
-  color: var(--text);
-  align-self: flex-end;
-  max-width: 80%;
-  box-shadow: 0 1px 1px var(--shadow);
-}
-
-.history-msg .time {
-  font-size: 11px;
-  color: var(--gray);
-  margin-left: 10px;
-  float: right;
-  margin-top: 2px;
-}
-
-/* ── Controls Bar (WhatsApp-style bottom bar) ── */
-.controls-bar {
-  background: var(--white);
-  padding: 12px 16px;
+/* ── Controls ── */
+.controls {
   display: flex;
   gap: 10px;
-  flex-shrink: 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
 }
 
 .btn {
   flex: 1;
   border: none;
-  border-radius: 24px;
+  border-radius: 12px;
   padding: 14px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-start {
-  background: var(--teal-dark);
-  color: var(--white);
+  background: var(--accent);
+  color: white;
 }
 
 .btn-start:hover {
-  background: var(--teal);
+  background: var(--accent-hover);
 }
 
 .btn-start.running {
-  background: #E67E22;
+  background: var(--orange);
 }
 
 .btn-start.running:hover {
-  background: #D35400;
+  background: var(--orange-hover);
 }
 
 .btn-reset {
   background: var(--bg);
-  color: var(--gray);
-  flex: 0.4;
+  color: var(--muted);
+  flex: 0 0 auto;
+  padding: 14px 24px;
 }
 
 .btn-reset:hover:not(:disabled) {
-  background: #d5ded6;
+  background: var(--border);
   color: var(--text);
 }
 
 .btn-reset:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
-/* ── Pulse animation when running ── */
+/* ── Duration Settings ── */
+.duration-settings {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.duration-input {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.duration-input label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.duration-input input {
+  width: 44px;
+  padding: 6px 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+
+.duration-input input::-webkit-inner-spin-button,
+.duration-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.duration-input input:focus {
+  border-color: var(--accent);
+}
+
+.duration-input input:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.duration-input span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── Session History ── */
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-msg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.history-msg .time {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* ── Running State ── */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.5; }
 }
 
 .timer-card.running .timer-display {
+  color: var(--accent);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -266,6 +280,10 @@ body {
   }
 
   .timer-display {
-    font-size: 60px;
+    font-size: 64px;
+  }
+
+  .duration-settings {
+    gap: 12px;
   }
 }

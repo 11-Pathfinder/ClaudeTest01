@@ -124,17 +124,25 @@ function complete() {
   }
 }
 
-// ── History (chat-bubble messages) ──
+// ── History (session log) ──
 function addHistory(text) {
   const now = new Date();
   const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const msg = document.createElement("div");
   msg.className = "history-msg";
-  msg.innerHTML = `${text}<span class="time">${timeStr}</span>`;
+
+  const label = document.createElement("span");
+  label.textContent = text;
+
+  const time = document.createElement("span");
+  time.className = "time";
+  time.textContent = timeStr;
+
+  msg.appendChild(label);
+  msg.appendChild(time);
   history.appendChild(msg);
 
-  // Scroll to bottom
   msg.scrollIntoView({ behavior: "smooth" });
 }
 
