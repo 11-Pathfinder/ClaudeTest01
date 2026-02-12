@@ -1,9 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#2D9C8F"/>
-  <circle cx="256" cy="240" r="150" fill="none" stroke="#fff" stroke-width="20"/>
-  <line x1="256" y1="240" x2="256" y2="140" stroke="#fff" stroke-width="16" stroke-linecap="round"/>
-  <line x1="256" y1="240" x2="320" y2="270" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="256" cy="240" r="10" fill="#fff"/>
-  <rect x="236" y="60" width="40" height="24" rx="6" fill="#fff"/>
-  <text x="256" y="440" text-anchor="middle" fill="#fff" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="48" font-weight="700">POMO</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34B3A4"/>
+      <stop offset="100%" stop-color="#228578"/>
+    </linearGradient>
+  </defs>
+  <!-- iOS-style rounded square -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Bold rounded "P" drawn as a path, inspired by SF Rounded -->
+  <path d="
+    M 172 400
+    L 172 128
+    Q 172 112 188 112
+    L 280 112
+    Q 360 112 360 192
+    Q 360 272 280 272
+    L 220 272
+    L 220 400
+    Q 220 416 196 416
+    Q 172 416 172 400
+    Z
+    M 220 160
+    L 220 224
+    L 272 224
+    Q 312 224 312 192
+    Q 312 160 272 160
+    Z
+  " fill="rgba(255,255,255,0.95)" fill-rule="evenodd"/>
 </svg>
