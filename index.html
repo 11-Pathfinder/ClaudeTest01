@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top-bar">
+      <h1>Pomodoro</h1>
+      <span class="session-count" id="sessionCount">0 sessions</span>
+    </header>
+
+    <main class="chat-area">
+      <div class="timer-card" id="timerCard">
+        <div class="mode-tabs">
+          <button class="tab active" data-mode="focus">Focus</button>
+          <button class="tab" data-mode="short">Short Break</button>
+          <button class="tab" data-mode="long">Long Break</button>
+        </div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-label" id="timerLabel">Time to focus</div>
+      </div>
+
+      <div class="history" id="history"></div>
+    </main>
+
+    <footer class="controls-bar">
+      <button class="btn btn-reset" id="btnReset" disabled>Reset</button>
+      <button class="btn btn-start" id="btnStart">Start</button>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
