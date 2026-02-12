@@ -22,6 +22,10 @@ const btnReset  = document.getElementById("btnReset");
 const sessionEl = document.getElementById("sessionCount");
 const history   = document.getElementById("history");
 const tabs      = document.querySelectorAll(".tab");
+const focusInput = document.getElementById("focusMin");
+const shortInput = document.getElementById("shortMin");
+const longInput  = document.getElementById("longMin");
+const durationInputs = { focus: focusInput, short: shortInput, long: longInput };
 
 // ── Format time as MM:SS ──
 function formatTime(seconds) {
@@ -34,6 +38,13 @@ function formatTime(seconds) {
 function render() {
   display.textContent = formatTime(remainingSeconds);
   document.title = `${formatTime(remainingSeconds)} - Pomodoro`;
+}
+
+// ── Toggle duration inputs ──
+function setInputsDisabled(disabled) {
+  focusInput.disabled = disabled;
+  shortInput.disabled = disabled;
+  longInput.disabled = disabled;
 }
 
 // ── Switch modes ──
@@ -51,6 +62,7 @@ function setMode(mode) {
   btnStart.classList.remove("running");
   btnReset.disabled = true;
   card.classList.remove("running");
+  setInputsDisabled(false);
 
   render();
 }
@@ -62,6 +74,7 @@ function start() {
   btnStart.classList.add("running");
   btnReset.disabled = false;
   card.classList.add("running");
+  setInputsDisabled(true);
 
   timerInterval = setInterval(() => {
     remainingSeconds--;
@@ -80,6 +93,7 @@ function stop() {
   btnStart.textContent = "Resume";
   btnStart.classList.remove("running");
   card.classList.remove("running");
+  setInputsDisabled(false);
 }
 
 function reset() {
@@ -154,6 +168,22 @@ btnReset.addEventListener("click", reset);
 
 tabs.forEach(tab => {
   tab.addEventListener("click", () => setMode(tab.dataset.mode));
+});
+
+// ── Duration input listeners ──
+Object.entries(durationInputs).forEach(([mode, input]) => {
+  input.addEventListener("change", () => {
+    let val = parseInt(input.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > parseInt(input.max, 10)) val = parseInt(input.max, 10);
+    input.value = val;
+    MODES[mode].minutes = val;
+    if (currentMode === mode && !isRunning) {
+      totalSeconds = val * 60;
+      remainingSeconds = totalSeconds;
+      render();
+    }
+  });
 });
 
 // ── Init ──

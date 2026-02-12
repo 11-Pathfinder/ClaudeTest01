@@ -20,6 +20,20 @@
           <button class="tab" data-mode="short">Short Break</button>
           <button class="tab" data-mode="long">Long Break</button>
         </div>
+        <div class="duration-settings">
+          <div class="duration-input">
+            <label for="focusMin">Focus</label>
+            <input type="number" id="focusMin" min="1" max="120" value="25"> <span>min</span>
+          </div>
+          <div class="duration-input">
+            <label for="shortMin">Short</label>
+            <input type="number" id="shortMin" min="1" max="60" value="5"> <span>min</span>
+          </div>
+          <div class="duration-input">
+            <label for="longMin">Long</label>
+            <input type="number" id="longMin" min="1" max="60" value="15"> <span>min</span>
+          </div>
+        </div>
         <div class="timer-display" id="timerDisplay">25:00</div>
         <div class="timer-label" id="timerLabel">Time to focus</div>
       </div>
