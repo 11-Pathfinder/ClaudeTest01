@@ -180,42 +180,92 @@ body {
 
 /* ── Music Toggle ── */
 .music-toggle {
-  margin-bottom: 20px;
-}
-
-.btn-music {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--border);
+  gap: 10px;
+  margin: 0 auto 20px;
+  padding: 10px 16px;
   background: var(--bg);
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 18px;
-  border-radius: 20px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.btn-music:hover {
-  color: var(--text);
-  border-color: var(--accent);
-}
-
-.btn-music.active {
-  background: var(--accent-light);
-  color: var(--accent);
-  border-color: var(--accent);
+.music-toggle:hover {
+  background: var(--border);
 }
 
 .music-icon {
-  font-size: 15px;
-  transition: transform 0.3s ease;
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: color 0.3s ease;
 }
 
-.btn-music.active .music-icon {
-  transform: scale(1.2);
+.music-toggle.active .music-icon {
+  color: var(--accent);
+}
+
+.music-toggle.active .bar {
+  animation: eq 1.2s ease-in-out infinite alternate;
+}
+
+.music-toggle.active .bar-1 { animation-delay: 0s; }
+.music-toggle.active .bar-2 { animation-delay: 0.3s; }
+.music-toggle.active .bar-3 { animation-delay: 0.6s; }
+
+@keyframes eq {
+  0%   { transform: scaleY(0.4); }
+  100% { transform: scaleY(1); }
+}
+
+.bar { transform-origin: center; }
+
+.music-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  flex: 1;
+  text-align: left;
+  transition: color 0.3s ease;
+}
+
+.music-toggle.active .music-label {
+  color: var(--text);
+}
+
+/* Toggle switch */
+.toggle-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--border);
+  border-radius: 11px;
+  flex-shrink: 0;
+  transition: background 0.3s ease;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.music-toggle.active .toggle-track {
+  background: var(--accent);
+}
+
+.music-toggle.active .toggle-knob {
+  transform: translateX(18px);
 }
 
 /* ── Duration Settings ── */
