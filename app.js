@@ -71,6 +71,31 @@ function setMode(mode) {
   render();
 }
 
+// ── Notifications ──
+function requestNotificationPermission() {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+
+function scheduleServiceWorkerNotification(seconds, mode) {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "SCHEDULE_NOTIFICATION",
+      delay: seconds * 1000,
+      mode: mode,
+    });
+  }
+}
+
+function cancelServiceWorkerNotification() {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "CANCEL_NOTIFICATION",
+    });
+  }
+}
+
 // ── Timer controls ──
 function start() {
   isRunning = true;
@@ -82,9 +107,14 @@ function start() {
 
   // Initialize audio context on user gesture (fixes mobile sound)
   initAudio();
+  // Request notification permission on first start (user gesture)
+  requestNotificationPermission();
 
   // Set the target end time based on remaining seconds
   targetEndTime = Date.now() + remainingSeconds * 1000;
+
+  // Schedule a backup notification via service worker (works with screen off)
+  scheduleServiceWorkerNotification(remainingSeconds, currentMode);
 
   timerInterval = setInterval(() => {
     const now = Date.now();
@@ -105,6 +135,7 @@ function stop() {
   clearInterval(timerInterval);
   timerInterval = null;
   targetEndTime = null;
+  cancelServiceWorkerNotification();
   btnStart.textContent = "Resume";
   btnStart.classList.remove("running");
   card.classList.remove("running");
@@ -120,19 +151,21 @@ function reset() {
 }
 
 function complete() {
+  const completedMode = currentMode;
   stop();
   playNotification();
+  showCompletionNotification(completedMode);
 
-  if (currentMode === "focus") {
+  if (completedMode === "focus") {
     sessions++;
     sessionEl.textContent = `${sessions} session${sessions !== 1 ? "s" : ""}`;
     addHistory(`Focus session #${sessions} completed`);
   } else {
-    addHistory(`${MODES[currentMode].label} finished`);
+    addHistory(`${MODES[completedMode].label} finished`);
   }
 
   // Auto-suggest next mode
-  if (currentMode === "focus") {
+  if (completedMode === "focus") {
     setMode(sessions % 4 === 0 ? "long" : "short");
   } else {
     setMode("focus");
@@ -195,6 +228,22 @@ function playNotification() {
     osc.start(audioCtx.currentTime + delay);
     osc.stop(audioCtx.currentTime + delay + 0.15);
   });
+}
+
+// ── System notification (visible even with screen off) ──
+function showCompletionNotification(mode) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    const title = mode === "focus" ? "Focus session complete!" : "Break is over!";
+    const body = mode === "focus" ? "Time to take a break." : "Ready to focus again?";
+    // Use service worker registration for better background support
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, { body, icon: "icon-192.png", tag: "pomodoro-complete" });
+      });
+    } else {
+      new Notification(title, { body, icon: "icon-192.png" });
+    }
+  }
 }
 
 // ── Catch up timer when app regains visibility (screen wake / tab focus) ──
