@@ -110,6 +110,11 @@ function start() {
   // Request notification permission on first start (user gesture)
   requestNotificationPermission();
 
+  // Start ambient music if enabled and in focus mode
+  if (musicEnabled && currentMode === "focus" && !musicPlaying) {
+    createAmbientMusic();
+  }
+
   // Set the target end time based on remaining seconds
   targetEndTime = Date.now() + remainingSeconds * 1000;
 
@@ -136,6 +141,7 @@ function stop() {
   timerInterval = null;
   targetEndTime = null;
   cancelServiceWorkerNotification();
+  stopAmbientMusic(true);
   btnStart.textContent = "Resume";
   btnStart.classList.remove("running");
   card.classList.remove("running");
@@ -245,6 +251,114 @@ function showCompletionNotification(mode) {
     }
   }
 }
+
+// ── Ambient Focus Music (procedural, no external files) ──
+let musicEnabled = false;
+let musicPlaying = false;
+let musicNodes = null; // { oscs, gains, filter, lfo, lfoGain, master }
+
+const btnMusic = document.getElementById("btnMusic");
+
+function createAmbientMusic() {
+  if (!audioCtx) initAudio();
+
+  const master = audioCtx.createGain();
+  master.gain.value = 0; // start silent, fade in
+  master.connect(audioCtx.destination);
+
+  // Low-pass filter for warmth
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 400;
+  filter.Q.value = 1;
+  filter.connect(master);
+
+  // LFO to gently sweep the filter cutoff (breathing effect)
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.type = "sine";
+  lfo.frequency.value = 0.06; // very slow sweep
+  lfoGain.gain.value = 200;   // sweeps cutoff +/- 200Hz around 400
+  lfo.connect(lfoGain);
+  lfoGain.connect(filter.frequency);
+  lfo.start();
+
+  // Warm chord: C3, E3, G3, C4 — detuned triangle oscillators
+  const notes = [130.81, 164.81, 196.00, 261.63];
+  const detunes = [-4, 3, -2, 5]; // subtle detuning in cents
+  const oscs = [];
+  const gains = [];
+
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    osc.detune.value = detunes[i];
+
+    // Lower volume for higher notes to keep the sound grounded
+    gain.gain.value = i < 2 ? 0.3 : 0.15;
+
+    osc.connect(gain);
+    gain.connect(filter);
+    osc.start();
+
+    oscs.push(osc);
+    gains.push(gain);
+  });
+
+  // Gentle high shimmer — a fifth octave sine at very low volume
+  const shimmer = audioCtx.createOscillator();
+  const shimmerGain = audioCtx.createGain();
+  shimmer.type = "sine";
+  shimmer.frequency.value = 523.25; // C5
+  shimmerGain.gain.value = 0.04;
+  shimmer.connect(shimmerGain);
+  shimmerGain.connect(filter);
+  shimmer.start();
+  oscs.push(shimmer);
+  gains.push(shimmerGain);
+
+  // Fade in over 2 seconds
+  master.gain.setValueAtTime(0, audioCtx.currentTime);
+  master.gain.linearRampToValueAtTime(0.09, audioCtx.currentTime + 2);
+
+  musicNodes = { oscs, gains, filter, lfo, lfoGain, master };
+  musicPlaying = true;
+}
+
+function stopAmbientMusic(fadeOut) {
+  if (!musicNodes || !musicPlaying) return;
+
+  const { oscs, lfo, master } = musicNodes;
+  const fadeTime = fadeOut ? 1.5 : 0.05;
+
+  master.gain.setValueAtTime(master.gain.value, audioCtx.currentTime);
+  master.gain.linearRampToValueAtTime(0, audioCtx.currentTime + fadeTime);
+
+  // Clean up nodes after fade
+  setTimeout(() => {
+    oscs.forEach(o => { try { o.stop(); } catch (_) {} });
+    try { lfo.stop(); } catch (_) {}
+    musicNodes = null;
+  }, fadeTime * 1000 + 100);
+
+  musicPlaying = false;
+}
+
+function toggleMusic() {
+  musicEnabled = !musicEnabled;
+  btnMusic.classList.toggle("active", musicEnabled);
+
+  if (musicEnabled && isRunning && currentMode === "focus") {
+    createAmbientMusic();
+  } else if (!musicEnabled) {
+    stopAmbientMusic(true);
+  }
+}
+
+btnMusic.addEventListener("click", toggleMusic);
 
 // ── Catch up timer when app regains visibility (screen wake / tab focus) ──
 document.addEventListener("visibilitychange", () => {

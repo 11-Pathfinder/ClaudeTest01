@@ -178,6 +178,46 @@ body {
   cursor: default;
 }
 
+/* ── Music Toggle ── */
+.music-toggle {
+  margin-bottom: 20px;
+}
+
+.btn-music {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-music:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.btn-music.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.music-icon {
+  font-size: 15px;
+  transition: transform 0.3s ease;
+}
+
+.btn-music.active .music-icon {
+  transform: scale(1.2);
+}
+
 /* ── Duration Settings ── */
 .duration-settings {
   display: flex;
