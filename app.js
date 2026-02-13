@@ -340,7 +340,7 @@ function createAmbientMusic() {
   rumbleLp.frequency.value = 150;
   rumbleLp.Q.value = 0.5;
   const rumbleGain = audioCtx.createGain();
-  rumbleGain.gain.value = 0.08;
+  rumbleGain.gain.value = 0.12;
   rumbleSource.connect(rumbleLp);
   rumbleLp.connect(rumbleGain);
   rumbleGain.connect(master);
@@ -365,11 +365,11 @@ function createAmbientMusic() {
   }
 
   // Big slow waves (8-12s cycle)
-  spawnWaveLayer(6, 10, 6, 10, 0.18, 800);
+  spawnWaveLayer(6, 10, 6, 10, 0.27, 800);
   // Medium waves (5-8s cycle)
-  spawnWaveLayer(4, 7, 4, 7, 0.10, 600);
+  spawnWaveLayer(4, 7, 4, 7, 0.15, 600);
   // Small ripples (3-5s cycle)
-  spawnWaveLayer(2, 4, 2, 4, 0.05, 500);
+  spawnWaveLayer(2, 4, 2, 4, 0.075, 500);
 
   musicNodes = { sources, master, waveTimers };
   musicPlaying = true;
