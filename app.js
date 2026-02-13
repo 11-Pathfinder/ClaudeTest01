@@ -252,100 +252,148 @@ function showCompletionNotification(mode) {
   }
 }
 
-// ── Ambient Focus Music (procedural, no external files) ──
+// ── Ambient Focus Music — Ocean Waves (procedural, no external files) ──
 let musicEnabled = false;
 let musicPlaying = false;
-let musicNodes = null; // { oscs, gains, filter, lfo, lfoGain, master }
+let musicNodes = null; // { sources, scriptNode, master, waveTimers }
 
 const btnMusic = document.getElementById("btnMusic");
 
+// Create a buffer of white noise (reusable)
+function createNoiseBuffer(duration) {
+  const sampleRate = audioCtx.sampleRate;
+  const length = sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  return buffer;
+}
+
+// Schedule a single wave crash with slow rise and gentle fall
+function scheduleWave(noiseBuffer, master, delay, duration, peakGain, filterPeak) {
+  const source = audioCtx.createBufferSource();
+  source.buffer = noiseBuffer;
+  source.loop = true;
+
+  // Bandpass filter — gives the "shhh" ocean character
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = 400;
+  bp.Q.value = 0.4;
+
+  // Highshelf cut — removes harsh high end
+  const shelf = audioCtx.createBiquadFilter();
+  shelf.type = "highshelf";
+  shelf.frequency.value = 3000;
+  shelf.gain.value = -8;
+
+  // Volume envelope: silence → slow rise → peak → gentle fall
+  const env = audioCtx.createGain();
+  env.gain.value = 0;
+
+  const t0 = audioCtx.currentTime + delay;
+  const rise = duration * 0.4;
+  const fall = duration * 0.6;
+
+  env.gain.setValueAtTime(0, t0);
+  env.gain.linearRampToValueAtTime(peakGain, t0 + rise);
+  env.gain.exponentialRampToValueAtTime(0.001, t0 + rise + fall);
+
+  // Filter sweep: low → high on crash → low on recede
+  bp.frequency.setValueAtTime(300, t0);
+  bp.frequency.linearRampToValueAtTime(filterPeak, t0 + rise);
+  bp.frequency.exponentialRampToValueAtTime(200, t0 + rise + fall);
+
+  source.connect(bp);
+  bp.connect(shelf);
+  shelf.connect(env);
+  env.connect(master);
+
+  source.start(t0);
+  source.stop(t0 + duration + 0.1);
+
+  return source;
+}
+
 function createAmbientMusic() {
-  initAudio(); // always ensure context exists and is resumed
+  initAudio();
 
   const master = audioCtx.createGain();
-  master.gain.value = 0; // start silent, fade in
+  master.gain.value = 0;
   master.connect(audioCtx.destination);
 
-  // Low-pass filter for warmth (higher cutoff so laptop speakers can hear it)
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.value = 800;
-  filter.Q.value = 0.7;
-  filter.connect(master);
-
-  // LFO to gently sweep the filter cutoff (breathing effect)
-  const lfo = audioCtx.createOscillator();
-  const lfoGain = audioCtx.createGain();
-  lfo.type = "sine";
-  lfo.frequency.value = 0.05; // very slow sweep
-  lfoGain.gain.value = 300;   // sweeps cutoff +/- 300Hz around 800
-  lfo.connect(lfoGain);
-  lfoGain.connect(filter.frequency);
-  lfo.start();
-
-  // Warm chord: C4, E4, G4, C5 — detuned triangle oscillators
-  // Pitched up one octave so laptop speakers reproduce them well
-  const notes = [261.63, 329.63, 392.00, 523.25];
-  const detunes = [-5, 3, -3, 6]; // subtle detuning in cents
-  const oscs = [];
-  const gains = [];
-
-  notes.forEach((freq, i) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = "triangle";
-    osc.frequency.value = freq;
-    osc.detune.value = detunes[i];
-
-    // Lower volume for higher notes to keep the sound grounded
-    gain.gain.value = i < 2 ? 0.25 : 0.12;
-
-    osc.connect(gain);
-    gain.connect(filter);
-    osc.start();
-
-    oscs.push(osc);
-    gains.push(gain);
-  });
-
-  // Gentle high shimmer — sine one octave above for sparkle
-  const shimmer = audioCtx.createOscillator();
-  const shimmerGain = audioCtx.createGain();
-  shimmer.type = "sine";
-  shimmer.frequency.value = 1046.50; // C6
-  shimmerGain.gain.value = 0.03;
-  shimmer.connect(shimmerGain);
-  shimmerGain.connect(filter);
-  shimmer.start();
-  oscs.push(shimmer);
-  gains.push(shimmerGain);
-
-  // Fade in over 2 seconds
+  // Fade in the master over 2 seconds
   master.gain.setValueAtTime(0, audioCtx.currentTime);
-  master.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 2);
+  master.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 2);
 
-  musicNodes = { oscs, gains, filter, lfo, lfoGain, master };
+  // Shared noise buffer (10 seconds, looped)
+  const noiseBuffer = createNoiseBuffer(10);
+
+  // Low rumble — filtered brownian noise for deep ocean bed
+  const rumbleSource = audioCtx.createBufferSource();
+  rumbleSource.buffer = noiseBuffer;
+  rumbleSource.loop = true;
+  const rumbleLp = audioCtx.createBiquadFilter();
+  rumbleLp.type = "lowpass";
+  rumbleLp.frequency.value = 150;
+  rumbleLp.Q.value = 0.5;
+  const rumbleGain = audioCtx.createGain();
+  rumbleGain.gain.value = 0.08;
+  rumbleSource.connect(rumbleLp);
+  rumbleLp.connect(rumbleGain);
+  rumbleGain.connect(master);
+  rumbleSource.start();
+
+  const sources = [rumbleSource];
+  const waveTimers = [];
+
+  // Wave layer — schedule overlapping waves on a loop
+  function spawnWaveLayer(minInterval, maxInterval, minDur, maxDur, gain, filterPeak) {
+    function next() {
+      if (!musicPlaying) return;
+      const duration = minDur + Math.random() * (maxDur - minDur);
+      const peakGain = gain * (0.7 + Math.random() * 0.3);
+      const src = scheduleWave(noiseBuffer, master, 0, duration, peakGain, filterPeak);
+      sources.push(src);
+      const interval = minInterval + Math.random() * (maxInterval - minInterval);
+      const timer = setTimeout(next, interval * 1000);
+      waveTimers.push(timer);
+    }
+    next();
+  }
+
+  // Big slow waves (8-12s cycle)
+  spawnWaveLayer(6, 10, 6, 10, 0.18, 800);
+  // Medium waves (5-8s cycle)
+  spawnWaveLayer(4, 7, 4, 7, 0.10, 600);
+  // Small ripples (3-5s cycle)
+  spawnWaveLayer(2, 4, 2, 4, 0.05, 500);
+
+  musicNodes = { sources, master, waveTimers };
   musicPlaying = true;
 }
 
 function stopAmbientMusic(fadeOut) {
   if (!musicNodes || !musicPlaying) return;
 
-  const { oscs, lfo, master } = musicNodes;
-  const fadeTime = fadeOut ? 1.5 : 0.05;
+  const { sources, master, waveTimers } = musicNodes;
+  const fadeTime = fadeOut ? 2 : 0.05;
+
+  musicPlaying = false;
+
+  // Stop scheduling new waves
+  waveTimers.forEach(t => clearTimeout(t));
 
   master.gain.setValueAtTime(master.gain.value, audioCtx.currentTime);
   master.gain.linearRampToValueAtTime(0, audioCtx.currentTime + fadeTime);
 
   // Clean up nodes after fade
   setTimeout(() => {
-    oscs.forEach(o => { try { o.stop(); } catch (_) {} });
-    try { lfo.stop(); } catch (_) {}
+    sources.forEach(s => { try { s.stop(); } catch (_) {} });
     musicNodes = null;
   }, fadeTime * 1000 + 100);
-
-  musicPlaying = false;
 }
 
 function toggleMusic() {
