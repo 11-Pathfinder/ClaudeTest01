@@ -12,6 +12,10 @@ let remainingSeconds = totalSeconds;
 let timerInterval = null;
 let isRunning = false;
 let sessions = 0;
+let targetEndTime = null; // timestamp when timer should finish
+
+// ── Audio context (must be created on user gesture for mobile) ──
+let audioCtx = null;
 
 // ── DOM ──
 const display   = document.getElementById("timerDisplay");
@@ -76,20 +80,31 @@ function start() {
   card.classList.add("running");
   setInputsDisabled(true);
 
+  // Initialize audio context on user gesture (fixes mobile sound)
+  initAudio();
+
+  // Set the target end time based on remaining seconds
+  targetEndTime = Date.now() + remainingSeconds * 1000;
+
   timerInterval = setInterval(() => {
-    remainingSeconds--;
-    render();
+    const now = Date.now();
+    remainingSeconds = Math.round((targetEndTime - now) / 1000);
 
     if (remainingSeconds <= 0) {
+      remainingSeconds = 0;
+      render();
       complete();
+    } else {
+      render();
     }
-  }, 1000);
+  }, 250); // tick faster to catch up after screen wake
 }
 
 function stop() {
   isRunning = false;
   clearInterval(timerInterval);
   timerInterval = null;
+  targetEndTime = null;
   btnStart.textContent = "Resume";
   btnStart.classList.remove("running");
   card.classList.remove("running");
@@ -146,26 +161,56 @@ function addHistory(text) {
   msg.scrollIntoView({ behavior: "smooth" });
 }
 
-// ── Sound notification ──
+// ── Audio (initialize on first user gesture for mobile compatibility) ──
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Resume if suspended (mobile browsers suspend until user gesture)
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
 function playNotification() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
 
   // Play three short beeps
   [0, 0.2, 0.4].forEach(delay => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(audioCtx.destination);
 
     osc.type = "sine";
     osc.frequency.value = 880;
     gain.gain.value = 0.3;
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.15);
 
-    osc.start(ctx.currentTime + delay);
-    osc.stop(ctx.currentTime + delay + 0.15);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + 0.15);
   });
 }
+
+// ── Catch up timer when app regains visibility (screen wake / tab focus) ──
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && isRunning && targetEndTime) {
+    const now = Date.now();
+    remainingSeconds = Math.round((targetEndTime - now) / 1000);
+    if (remainingSeconds <= 0) {
+      remainingSeconds = 0;
+      render();
+      complete();
+    } else {
+      render();
+    }
+  }
+});
 
 // ── Event Listeners ──
 btnStart.addEventListener("click", () => {
