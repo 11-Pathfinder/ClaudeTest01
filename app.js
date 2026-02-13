@@ -260,32 +260,33 @@ let musicNodes = null; // { oscs, gains, filter, lfo, lfoGain, master }
 const btnMusic = document.getElementById("btnMusic");
 
 function createAmbientMusic() {
-  if (!audioCtx) initAudio();
+  initAudio(); // always ensure context exists and is resumed
 
   const master = audioCtx.createGain();
   master.gain.value = 0; // start silent, fade in
   master.connect(audioCtx.destination);
 
-  // Low-pass filter for warmth
+  // Low-pass filter for warmth (higher cutoff so laptop speakers can hear it)
   const filter = audioCtx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 400;
-  filter.Q.value = 1;
+  filter.frequency.value = 800;
+  filter.Q.value = 0.7;
   filter.connect(master);
 
   // LFO to gently sweep the filter cutoff (breathing effect)
   const lfo = audioCtx.createOscillator();
   const lfoGain = audioCtx.createGain();
   lfo.type = "sine";
-  lfo.frequency.value = 0.06; // very slow sweep
-  lfoGain.gain.value = 200;   // sweeps cutoff +/- 200Hz around 400
+  lfo.frequency.value = 0.05; // very slow sweep
+  lfoGain.gain.value = 300;   // sweeps cutoff +/- 300Hz around 800
   lfo.connect(lfoGain);
   lfoGain.connect(filter.frequency);
   lfo.start();
 
-  // Warm chord: C3, E3, G3, C4 — detuned triangle oscillators
-  const notes = [130.81, 164.81, 196.00, 261.63];
-  const detunes = [-4, 3, -2, 5]; // subtle detuning in cents
+  // Warm chord: C4, E4, G4, C5 — detuned triangle oscillators
+  // Pitched up one octave so laptop speakers reproduce them well
+  const notes = [261.63, 329.63, 392.00, 523.25];
+  const detunes = [-5, 3, -3, 6]; // subtle detuning in cents
   const oscs = [];
   const gains = [];
 
@@ -298,7 +299,7 @@ function createAmbientMusic() {
     osc.detune.value = detunes[i];
 
     // Lower volume for higher notes to keep the sound grounded
-    gain.gain.value = i < 2 ? 0.3 : 0.15;
+    gain.gain.value = i < 2 ? 0.25 : 0.12;
 
     osc.connect(gain);
     gain.connect(filter);
@@ -308,12 +309,12 @@ function createAmbientMusic() {
     gains.push(gain);
   });
 
-  // Gentle high shimmer — a fifth octave sine at very low volume
+  // Gentle high shimmer — sine one octave above for sparkle
   const shimmer = audioCtx.createOscillator();
   const shimmerGain = audioCtx.createGain();
   shimmer.type = "sine";
-  shimmer.frequency.value = 523.25; // C5
-  shimmerGain.gain.value = 0.04;
+  shimmer.frequency.value = 1046.50; // C6
+  shimmerGain.gain.value = 0.03;
   shimmer.connect(shimmerGain);
   shimmerGain.connect(filter);
   shimmer.start();
@@ -322,7 +323,7 @@ function createAmbientMusic() {
 
   // Fade in over 2 seconds
   master.gain.setValueAtTime(0, audioCtx.currentTime);
-  master.gain.linearRampToValueAtTime(0.09, audioCtx.currentTime + 2);
+  master.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 2);
 
   musicNodes = { oscs, gains, filter, lfo, lfoGain, master };
   musicPlaying = true;
