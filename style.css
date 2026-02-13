@@ -209,20 +209,17 @@ body {
   color: var(--accent);
 }
 
-.music-toggle.active .bar {
-  animation: eq 1.2s ease-in-out infinite alternate;
+.music-toggle.active .wave {
+  animation: drift 3s ease-in-out infinite;
 }
 
-.music-toggle.active .bar-1 { animation-delay: 0s; }
-.music-toggle.active .bar-2 { animation-delay: 0.3s; }
-.music-toggle.active .bar-3 { animation-delay: 0.6s; }
+.music-toggle.active .wave-1 { animation-delay: 0s; }
+.music-toggle.active .wave-2 { animation-delay: 0.8s; }
 
-@keyframes eq {
-  0%   { transform: scaleY(0.4); }
-  100% { transform: scaleY(1); }
+@keyframes drift {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(3px); }
 }
-
-.bar { transform-origin: center; }
 
 .music-label {
   font-size: 13px;
